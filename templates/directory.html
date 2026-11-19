@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block title %}{{ title }}{% endblock %}
+{% block body %}
+<h1>{{ title }}</h1><p class="muted">{{ blurb }}</p>
+<form class="filters">
+  <input name="specialisation" placeholder="{{ 'Instrument' if cat in ('musicians','trainers') else 'Speciality' }}" value="{{ args.specialisation or '' }}">
+  {% if cat=='musicians' %}<select name="family" aria-label="Instrument family"><option value="">All instrument families</option>{% for f in families %}<option {{ 'selected' if args.family==f }}>{{ f }}</option>{% endfor %}</select>{% endif %}
+  <input name="genre" placeholder="Genre" value="{{ args.genre or '' }}">
+  <input name="location" placeholder="Location" value="{{ args.location or '' }}">
+  <input name="min_exp" type="number" min="0" placeholder="Min. years" value="{{ args.min_exp or '' }}">
+  <input name="max_rate" type="number" min="0" placeholder="Max rate (UGX)" value="{{ args.max_rate or '' }}">
+  <button class="btn sm">Filter</button>
+</form>
+<div class="grid">{% for p in results %}{% include "_card.html" %}{% else %}
+<p>No providers match these filters. Clear a filter or check back soon.</p>{% endfor %}</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% block title %}Users{% endblock %}
+{% block body %}<h1>Users</h1>
+<p class="muted">{% if g.user.is_superadmin %}As a super admin you can change roles and suspend anyone except yourself.{% else %}As an admin you can suspend or restore users and artists. Staff accounts are managed by super admins.{% endif %}</p>
+<form class="filters">
+  <input name="q" placeholder="Search name or email" value="{{ args.q or '' }}" aria-label="Search">
+  <select name="role" aria-label="Role"><option value="">All roles</option>{% for k, label in roles.items() %}<option value="{{ k }}" {{ 'selected' if args.role==k }}>{{ label }}</option>{% endfor %}</select>
+  <button class="btn sm">Filter</button>
+</form>
+<table>
+<thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+{% for u in users %}<tr>
+  <td>{{ u.name }}<br><span class="muted">{{ u.email }}</span></td>
+  <td><span class="badge {{ 'super' if u.role=='superadmin' else ('' if u.role=='admin' else 'alt') }}">{{ u.role_label }}</span></td>
+  <td>{% if u.suspended %}<b>Suspended</b>{% else %}<span class="muted">Active</span>{% endif %}</td>
+  <td>{% if can_manage(g.user, u) %}
+    {% if g.user.is_superadmin %}<form method="post" action="{{ url_for('superadmin_user_role', uid=u.id) }}" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}">
+      <select name="role" aria-label="Role for {{ u.name }}">{% for k, label in roles.items() %}<option value="{{ k }}" {{ 'selected' if u.role==k }}>{{ label }}</option>{% endfor %}</select> <button class="link">Set role</button></form>{% endif %}
+    <form method="post" action="{{ url_for('admin_user_suspend', uid=u.id) }}" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link">{{ 'Restore' if u.suspended else 'Suspend' }}</button></form>
+  {% else %}<span class="muted">{{ 'You' if u.id==g.user.id else 'Protected' }}</span>{% endif %}</td>
+</tr>{% else %}<tr><td class="muted">No users match.</td></tr>{% endfor %}
+</table>
+<p><a href="{{ url_for('superadmin' if g.user.is_superadmin else 'admin') }}">Back</a></p>
+{% endblock %}

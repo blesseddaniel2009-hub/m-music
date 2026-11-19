@@ -1,0 +1,6 @@
+<a class="pcard" href="{{ url_for('product', pid=p.id) }}">
+  {% if p.image %}<img class="avatar sq" src="{{ url_for('media', name=p.image) }}" alt="">{% else %}<span class="avatar sq">{{ p.category[0] if p.category else 'M' }}</span>{% endif %}
+  <strong>{{ p.name }}</strong><span class="muted">{{ p.brand }} · {{ p.category }}</span>
+  <span class="rate">{{ p.price|ugx }}</span>
+  <span class="muted">{{ 'In stock' if p.stock else 'Out of stock' }}</span>
+</a>

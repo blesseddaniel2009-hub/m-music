@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block title %}Checkout{% endblock %}
+{% block body %}<h1>Checkout</h1><p>{{ items|length }} item(s), total <b>{{ total|ugx }}</b></p>
+<form method="post" class="stack narrow"><input type="hidden" name="csrf" value="{{ csrf }}">
+<label>Delivery address<textarea name="address" required></textarea></label>
+<p class="muted">You choose how to pay on the next step.</p>
+<button class="btn">Continue to payment</button></form>{% endblock %}

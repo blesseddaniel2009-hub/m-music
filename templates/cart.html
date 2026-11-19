@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block title %}Cart{% endblock %}
+{% block body %}<h1>Shopping cart</h1>
+{% if items %}<table>{% for p, q in items %}<tr><td><a href="{{ url_for('product', pid=p.id) }}">{{ p.name }}</a></td><td>{{ q }} × {{ p.price|ugx }}</td><td>{{ (p.price*q)|ugx }}</td>
+<td><form method="post" action="{{ url_for('cart_remove', pid=p.id) }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link">Remove</button></form></td></tr>{% endfor %}
+<tr><th colspan="2">Total</th><th>{{ total|ugx }}</th><td></td></tr></table>
+<a class="btn" href="{{ url_for('checkout') }}">Go to checkout</a>
+{% else %}<p>Your cart is empty. <a href="{{ url_for('shop') }}">Browse the shop</a>.</p>{% endif %}{% endblock %}

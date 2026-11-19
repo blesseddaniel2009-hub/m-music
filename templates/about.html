@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% block title %}About{% endblock %}
+{% block body %}
+<h1>About M MUSICS</h1>
+<p class="lead">M MUSICS is a marketplace that connects people with professional musicians, composers, producers, trainers and quality instruments, starting in Uganda.</p>
+<div class="two"><article>
+<h2>Our mission</h2>
+<p>To make professional musical services, music education and quality instruments more accessible through a reliable, convenient and professionally managed platform.</p>
+<h2>Our vision</h2>
+<p>To become a leading music services and equipment marketplace that connects musical talent, creativity, education and technology.</p>
+<h2>How it works</h2>
+<p><b>Customers</b> find a musician, composer, producer or trainer, send a request, agree a quote, pay and review the work. They can also buy instruments and accessories from the shop.</p>
+<p><b>Providers</b> create a profile with a photo and audio sample, set their rates, and manage booking requests. Profiles go public after approval, and verified providers get a badge.</p>
+</article>
+<aside class="panel"><h2>What we value</h2>
+<dl><dt>Professionalism</dt><dd>High standards in every service.</dd>
+<dt>Creativity</dt><dd>Supporting musical innovation.</dd>
+<dt>Accessibility</dt><dd>Services within reach of more people.</dd>
+<dt>Reliability</dt><dd>Trustworthy providers and payments.</dd>
+<dt>Community</dt><dd>Opportunities for musicians and fans.</dd></dl>
+<a class="btn" href="{{ url_for('services') }}">Explore services</a></aside></div>
+{% endblock %}

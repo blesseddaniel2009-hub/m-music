@@ -1,0 +1,99 @@
+{% extends "base.html" %}{% block title %}{{ p.display_name }}{% endblock %}
+{% block body %}
+{% if not p.approved %}<p class="flash error">Awaiting admin approval. Only you and admins can see this page.</p>{% endif %}
+<div class="two">
+<article>
+  {% if p.photo %}<img class="avatar big" src="{{ url_for('media', name=p.photo) }}" alt="">{% else %}<span class="avatar big">{{ p.display_name[0] }}</span>{% endif %}
+  <h1>{{ p.display_name }}{% if p.verified %} <span class="badge">Verified</span>{% endif %}</h1>
+  <p class="muted">{{ p.specialisation }} · {{ p.location }} · {{ p.experience_years }} years{% if p.rating %} · {{ p.rating }}/5{% endif %}</p>
+  <p>{{ p.bio }}</p>
+  <dl>
+    <dt>Genres</dt><dd>{{ p.genres or '-' }}</dd>
+    <dt>Rate</dt><dd>{{ p.rate_label }}</dd>
+    <dt>Availability</dt>
+    <dd>
+      {{ p.availability or 'See the free days below, or ask the provider.' }}
+      {% if free_days %}
+        <span class="avail-chips">
+          {% for d in free_days[:12] %}
+            <span class="chip chip-free">{{ d|to_date('%a %d %b') }}</span>
+          {% endfor %}
+          {% if free_days|length > 12 %}<span class="muted">+{{ free_days|length-12 }} more</span>{% endif %}
+        </span>
+      {% elif busy_days %}
+        <span class="muted">No free days marked yet.</span>
+      {% endif %}
+    </dd>
+    {% if p.portfolio_url %}<dt>Portfolio</dt><dd><a href="{{ p.portfolio_url }}" rel="noopener nofollow" target="_blank">Listen and watch</a></dd>{% endif %}
+  </dl>
+  {% if is_owner %}
+    <p><a class="btn sm" href="{{ url_for('provider_availability', pid=p.id) }}">Edit my availability calendar</a></p>
+  {% endif %}
+  {% if p.audio %}<p><audio controls preload="none" src="{{ url_for('media', name=p.audio) }}"></audio></p>{% endif %}
+  <h2>Reviews</h2>
+  {% if p.rating %}<p class="muted">Average: <span class="stars" data-stars="{{ p.rating }}" aria-label="{{ p.rating }} out of 5"></span> <b>{{ p.rating }}</b>/5 from {{ p.reviews|selectattr('approved')|list|length }} review(s)</p>{% endif %}
+  {% for r in p.reviews if r.approved %}
+    <div class="review">
+      <p class="review-head"><span class="stars" data-stars="{{ r.stars }}" aria-label="{{ r.stars }} out of 5"></span> <b>{{ r.user.name }}</b></p>
+      <p>{{ r.comment }}</p>
+    </div>
+  {% else %}<p class="muted">No reviews yet.</p>{% endfor %}
+  {# The artist cannot rate their own profile. #}
+  {% if g.user and g.user.id != p.user_id %}
+  <form method="post" action="{{ url_for('review', pid=p.id) }}" class="stack review-form"><input type="hidden" name="csrf" value="{{ csrf }}">
+    <fieldset class="star-fieldset">
+      <legend>Your rating</legend>
+      <div class="star-input" role="radiogroup" aria-label="Rating from 1 to 5 stars">
+        {% for i in [5,4,3,2,1] %}
+        <input type="radio" name="stars" value="{{ i }}" id="st{{ i }}" {% if i==5 %}checked{% endif %}>
+        <label for="st{{ i }}" title="{{ i }} star{{ 's' if i>1 }}" aria-label="{{ i }} stars">★</label>
+        {% endfor %}
+      </div>
+    </fieldset>
+    <textarea name="comment" placeholder="Share your experience (completed bookings only)"></textarea>
+    <button class="btn sm">Post review</button></form>
+  {% elif g.user and g.user.id == p.user_id %}
+    <p class="muted">You can't review your own profile.</p>
+  {% endif %}
+</article>
+<aside class="panel">
+  <h2>{{ 'Request a quote' if p.category in ('composers','producers') else 'Request a booking' }}</h2>
+  <form method="post" action="{{ url_for('book', pid=p.id) }}" class="stack" id="book-form"><input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Event or project type<input name="event_type" required></label>
+    <label>Date<input type="date" name="date" id="bk-date" required></label>
+    <label>Preferred time<input type="time" name="time"></label>
+    <label>Location<input name="location"></label>
+    <label>Duration<input name="duration" id="bk-dur" placeholder="e.g. 3 hours"></label>
+    {% if p.rate_unit == 'hour' and p.rate %}
+      <p class="rate-estimate muted">Estimated cost: <b id="bk-est">—</b></p>
+    {% endif %}
+    <label>Budget (UGX)<input type="number" min="0" name="budget"></label>
+    <label>Details<textarea name="details"></textarea></label>
+    <button class="btn">Send request</button>
+  </form>
+</aside></div>
+
+<script>
+var FREE={{ free_days|tojson }}, BUSY={{ busy_days|tojson }};
+(function(){
+  var date=document.getElementById('bk-date');
+  if(date){
+    date.addEventListener('change',function(){
+      if(BUSY.indexOf(date.value)>=0){
+        alert('The provider is marked busy on '+date.value+'. Please pick another date.');
+        date.value='';
+      }
+    });
+  }
+  {% if p.rate_unit == 'hour' and p.rate %}
+  var dur=document.getElementById('bk-dur'),est=document.getElementById('bk-est'),rate={{ p.rate }};
+  function upd(){
+    var m=(dur.value||'').match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h)\b/i);
+    var h=m?parseFloat(m[1]):0;
+    est.textContent=h>0?('UGX '+(rate*h).toLocaleString()):'—';
+  }
+  dur.addEventListener('input',upd);upd();
+  {% endif %}
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit your provider profile' if p else 'Offer your services' }}{% endblock %}
+{% block body %}
+<h1>{{ 'Edit your provider profile' if p else 'Offer your services' }}</h1>
+<p class="muted">Fields marked with * are required. Set your hourly rate, then open the
+availability calendar to mark the days you are free or busy.</p>
+
+<form method="post" enctype="multipart/form-data" class="stack narrow"><input type="hidden" name="csrf" value="{{ csrf }}">
+  <label>I am a*<select name="category" id="cat">{% for k, v in cats.items() %}<option value="{{ k }}" {{ 'selected' if p and p.category==k }}>{{ v }}</option>{% endfor %}</select></label>
+  <label id="fam" hidden>Instrument family*<select name="instrument_family"><option value="">Choose one</option>{% for f in families %}<option {{ 'selected' if p and p.instrument_family==f }}>{{ f }}</option>{% endfor %}</select></label>
+  <label>Name or stage name*<input name="display_name" required value="{{ p.display_name if p else g.user.name }}"></label>
+  <label>Instrument or speciality*<input name="specialisation" required value="{{ p.specialisation if p else '' }}"></label>
+  <label>Genres<input name="genres" value="{{ p.genres if p else '' }}"></label>
+  <label>Location<input name="location" value="{{ p.location if p else '' }}"></label>
+  <label>Years of experience<input type="number" min="0" name="experience_years" value="{{ p.experience_years if p else 0 }}"></label>
+
+  <fieldset class="rate-fieldset">
+    <legend>Pricing</legend>
+    <div class="rate-row">
+      <label>Rate amount (UGX)*
+        <input type="number" min="0" step="1000" name="rate" id="rate" required value="{{ p.rate if p else 0 }}">
+      </label>
+      <label>Charged per*
+        <select name="rate_unit" id="rate_unit">
+          <option value="hour" {{ 'selected' if not p or p.rate_unit=='hour' }}>Hour</option>
+          <option value="event" {{ 'selected' if p and p.rate_unit=='event' }}>Event / project</option>
+        </select>
+      </label>
+    </div>
+    <p class="rate-preview muted">Customers see: <b id="rate_preview">UGX {{ (p.rate if p else 0)|int }} / hour</b></p>
+  </fieldset>
+
+  <fieldset class="avail-fieldset">
+    <legend>Availability</legend>
+    <label>Quick note (optional)<input name="availability" value="{{ p.availability if p else '' }}" placeholder="e.g. Weekends and evenings"></label>
+    <p class="muted">Mark the exact days you are <b>free</b> or <b>busy</b> on a month calendar.
+       Customers will see your free days when they book you.</p>
+    {% if p %}
+      <a class="btn sm" href="{{ url_for('provider_availability', pid=p.id) }}">
+        Open availability calendar
+      </a>
+    {% else %}
+      <p class="muted">Save your profile first, then open the calendar to mark free/busy days.</p>
+    {% endif %}
+  </fieldset>
+
+  <label>Portfolio link (audio or video)<input type="url" name="portfolio_url" value="{{ p.portfolio_url if p else '' }}"></label>
+  <label>Biography<textarea name="bio">{{ p.bio if p else '' }}</textarea></label>
+  <label>Photo (png, jpg, webp)<input type="file" name="photo" accept="image/*"></label>
+  <label>Audio sample (mp3, wav, m4a, ogg)<input type="file" name="audio" accept="audio/*"></label>
+  <button class="btn">Save profile</button>
+</form>
+
+<script>
+// Instrument family field shows only for musicians.
+(function(){
+  var c=document.getElementById('cat'),f=document.getElementById('fam');
+  function t(){var m=c.value==='musicians';f.hidden=!m;f.querySelector('select').required=m}
+  c.addEventListener('change',t);t();
+})();
+// Live rate preview.
+(function(){
+  var rate=document.getElementById('rate'),unit=document.getElementById('rate_unit'),pv=document.getElementById('rate_preview');
+  function fmt(n){return 'UGX '+Number(n||0).toLocaleString()+' / '+unit.value;}
+  function upd(){pv.textContent=fmt(rate.value);}
+  rate.addEventListener('input',upd);unit.addEventListener('change',upd);upd();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,7 @@
+<a class="pcard" href="{{ url_for('provider', pid=p.id) }}">
+  {% if p.photo %}<img class="avatar" src="{{ url_for('media', name=p.photo) }}" alt="">{% else %}<span class="avatar">{{ p.display_name[0] }}</span>{% endif %}
+  <strong>{{ p.display_name }}{% if p.verified %} <span class="badge">Verified</span>{% endif %}</strong>
+  <span>{{ p.specialisation }}</span>
+  <span class="muted">{{ p.location }}{% if p.rating %} · {{ p.rating }}/5{% endif %}</span>
+  <span class="rate">{% if p.rate %}From {{ p.rate_label }}{% else %}Ask for a quote{% endif %}</span>
+</a>

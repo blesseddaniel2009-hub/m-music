@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block title %}Booking #{{ b.id }}{% endblock %}
+{% block body %}<h1>Booking #{{ b.id }}</h1>
+<p><b>{{ b.status }}</b> · {{ b.provider.display_name }} for {{ b.customer.name }}{% if b.paid %} · <b>Paid</b>{% endif %}</p>
+<dl><dt>Event</dt><dd>{{ b.event_type }}</dd><dt>When</dt><dd>{{ b.date }} {{ b.time }}</dd><dt>Where</dt><dd>{{ b.location or '-' }}</dd>
+<dt>Duration</dt><dd>{{ b.duration or '-' }}</dd><dt>Budget</dt><dd>{{ b.budget|ugx }}</dd><dt>Quote</dt><dd>{{ b.quote|ugx if b.quote else 'Not set yet' }}</dd>
+<dt>Details</dt><dd>{{ b.details or '-' }}</dd></dl>
+{% if is_prov and b.status in ('Pending','Accepted') %}<form method="post" action="{{ url_for('booking_quote', bid=b.id) }}" class="filters"><input type="hidden" name="csrf" value="{{ csrf }}">
+<input type="number" min="1" name="quote" placeholder="Your quote (UGX)" required><button class="btn sm">Send quote</button></form>{% endif %}
+{% if g.user.id==b.customer_id and b.quote and not b.paid and b.status in ('Accepted','Confirmed','In Progress','Completed') %}
+<a class="btn" href="{{ url_for('pay', kind='booking', oid=b.id) }}">Pay {{ b.quote|ugx }}</a>{% endif %}
+<h2>Messages</h2>{% for m in b.messages %}<p><b>{{ m.sender.name }}</b> <span class="muted">{{ m.created.strftime('%d %b %H:%M') }}</span><br>{{ m.text }}</p>{% else %}<p class="muted">No messages yet.</p>{% endfor %}
+<form method="post" action="{{ url_for('booking_message', bid=b.id) }}" class="stack narrow"><input type="hidden" name="csrf" value="{{ csrf }}"><textarea name="text" required placeholder="Write a message"></textarea><button class="btn sm">Send</button></form>
+<p><a href="{{ url_for('dashboard') }}">Back to dashboard</a></p>{% endblock %}

@@ -1,0 +1,15 @@
+# Files excluded from the Vercel deployment bundle.
+# These are local-only and should not ship to the serverless function.
+
+__pycache__/
+*.pyc
+*.pyo
+tests/
+_screenshots/
+*.db
+mmusics.db
+instance/
+.git/
+.gitignore
+GRAPHICS_CHANGES.md
+README.md

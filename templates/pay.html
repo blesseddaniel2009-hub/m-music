@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block title %}Pay{% endblock %}
+{% block body %}<h1>Pay {{ amount|ugx }}</h1><p class="muted">{{ label }}</p>
+{% if demo %}<p class="flash">Demo mode: no real money moves. Set PAYMENT_MODE=live and connect a gateway to take real payments.</p>{% endif %}
+<form method="post" class="stack narrow"><input type="hidden" name="csrf" value="{{ csrf }}">
+<label>Payment method<select name="method">{% for m in methods %}<option>{{ m }}</option>{% endfor %}</select></label>
+<label>Mobile money number<input name="phone" inputmode="tel" placeholder="07XXXXXXXX"></label>
+<button class="btn">Pay {{ amount|ugx }}</button></form>{% endblock %}

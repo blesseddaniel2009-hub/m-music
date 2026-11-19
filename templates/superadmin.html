@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% block title %}Super admin{% endblock %}
+{% block body %}<h1>Super admin</h1>
+<p class="muted">Developer and overseer controls. Day-to-day site management (approvals, shop, orders) lives in the <a href="{{ url_for('admin') }}">Admin area</a>.</p>
+<p class="stats">{% for k, label in roles.items() %}<span><b>{{ by_role[k] }}</b> {{ label|lower }}{{ '' if by_role[k]==1 else 's' }}</span>{% endfor %}</p>
+<p class="stats"><span><b>{{ pending }}</b> artists awaiting approval</span><span><b>{{ suspended }}</b> suspended</span><span><b>{{ bookings }}</b> bookings</span><span><b>{{ orders }}</b> shop orders</span><span><b>{{ products }}</b> products</span></p>
+<p><a class="btn sm" href="{{ url_for('admin_users') }}">Manage all users and roles</a> <a class="btn sm ghost" href="{{ url_for('admin') }}">Open admin area</a></p>
+
+<h2>Staff accounts</h2>
+<table><thead><tr><th>Name</th><th>Role</th><th>Actions</th></tr></thead>
+{% for u in staff %}<tr><td>{{ u.name }}<br><span class="muted">{{ u.email }}</span></td><td><span class="badge {{ 'super' if u.role=='superadmin' else '' }}">{{ u.role_label }}</span></td>
+<td>{% if u.id != g.user.id %}<form method="post" action="{{ url_for('superadmin_user_role', uid=u.id) }}" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="role" value="customer"><button class="link">Remove staff access</button></form>{% else %}<span class="muted">You</span>{% endif %}</td></tr>{% endfor %}
+</table>
+<form method="post" action="{{ url_for('superadmin_staff') }}" class="filters"><input type="hidden" name="csrf" value="{{ csrf }}"><b>Create a staff account</b>
+<input name="name" placeholder="Full name" required><input type="email" name="email" placeholder="Email" required>
+<input type="password" name="password" placeholder="Password (8+ characters)" minlength="8" required>
+<select name="role" aria-label="Role"><option value="admin">Admin</option><option value="superadmin">Super admin</option></select>
+<button class="btn sm">Create</button></form>
+
+<h2>Newest accounts</h2>
+<table>{% for u in recent %}<tr><td>{{ u.name }}<br><span class="muted">{{ u.email }}</span></td><td><span class="badge {{ 'super' if u.role=='superadmin' else ('' if u.role=='admin' else 'alt') }}">{{ u.role_label }}</span></td><td class="muted">{{ u.created.strftime('%d %b %Y') if u.created else '' }}</td></tr>{% endfor %}</table>
+{% endblock %}

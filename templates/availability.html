@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Availability · {{ p.display_name }}{% endblock %}
+{% block body %}
+<h1>Availability calendar</h1>
+<p class="muted">For <b>{{ p.display_name }}</b>. Click any day to mark it <b>free</b>
+(green) or <b>busy</b> (red). Click a marked day again to clear it. Customers see
+your free days when booking you.</p>
+
+<nav class="cal-nav" aria-label="Month navigation">
+  <a class="btn sm ghost" href="{{ url_for('provider_availability', pid=p.id, y=prev.y, m=prev.m) }}">‹ Prev</a>
+  <span class="cal-month">{{ month_name }}</span>
+  <a class="btn sm ghost" href="{{ url_for('provider_availability', pid=p.id, y=next.y, m=next.m) }}">Next ›</a>
+</nav>
+
+<div class="avail-legend">
+  <span class="legend-free">Free</span>
+  <span class="legend-busy">Busy</span>
+  <span class="legend-clear">Click to set</span>
+</div>
+
+<div class="cal" role="grid" aria-label="Availability calendar">
+  <div class="cal-row cal-weekdays" role="row">
+    {% for d in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}<div class="cal-wd" role="columnheader">{{ d }}</div>{% endfor %}
+  </div>
+  {% for week in cells %}
+  <div class="cal-row" role="row">
+    {% for cell in week %}
+    <button type="button"
+            class="cal-cell avail {{ cell.status or '' }} {{ 'out' if not cell.in_month }} {{ 'today' if cell.today }}"
+            data-date="{{ cell.iso }}"
+            {% if not cell.in_month %}disabled{% endif %}
+            role="gridcell"
+            aria-label="{{ cell.iso }}: {{ cell.status or 'unmarked' }}">
+      <span class="cal-date">{{ cell.date.day }}</span>
+      <span class="avail-mark">{{ {'free':'Free','busy':'Busy'}[cell.status] if cell.status else '' }}</span>
+    </button>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+
+<form method="post" action="{{ url_for('provider_availability_clear', pid=p.id) }}" class="avail-clear-form">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <input type="hidden" name="y" value="{{ year }}">
+  <input type="hidden" name="m" value="{{ month }}">
+  <button type="submit" class="btn sm ghost" onclick="return confirm('Clear all free/busy marks for {{ month_name }}?')">Clear this month</button>
+  <a class="btn sm" href="{{ url_for('provider', pid=p.id) }}">Back to profile</a>
+</form>
+
+<p class="flash ok" id="avail-toast" hidden>Saved.</p>
+
+<script>
+(function(){
+  var toast=document.getElementById('avail-toast');
+  function show(){toast.hidden=false;clearTimeout(show._t);show._t=setTimeout(function(){toast.hidden=true},1200);}
+  document.querySelectorAll('.cal-cell.avail').forEach(function(btn){
+    if(btn.disabled) return;
+    btn.addEventListener('click',function(){
+      var fd=new FormData();
+      fd.append('csrf','{{ csrf }}');
+      fd.append('date',btn.dataset.date);
+      btn.classList.add('saving');
+      fetch('{{ url_for("provider_availability_toggle", pid=p.id) }}',{
+        method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}
+      }).then(function(r){return r.json()}).then(function(j){
+        btn.classList.remove('saving');
+        if(!j.ok){alert('Could not update. Please retry.');return;}
+        btn.classList.remove('free','busy');
+        if(j.status==='free'||j.status==='busy') btn.classList.add(j.status);
+        btn.querySelector('.avail-mark').textContent = j.status==='free'?'Free':(j.status==='busy'?'Busy':'');
+        btn.setAttribute('aria-label', btn.dataset.date+': '+(j.status||'unmarked'));
+        show();
+      }).catch(function(){btn.classList.remove('saving');alert('Network error.');});
+    });
+  });
+})();
+</script>
+{% endblock %}

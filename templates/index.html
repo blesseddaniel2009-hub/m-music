@@ -1,0 +1,26 @@
+{% extends "base.html" %}{% block title %}Home{% endblock %}
+{% block body %}
+<section class="hero">
+  <img class="hero-logo" src="{{ url_for('static', filename='logo.jpg') }}" alt="M MUSICS logo: a treble clef with a musical note" width="240" height="240">
+  <h1>Your music. Your talent. Our services.</h1>
+  <p>Discover professional musicians, connect with producers, learn from experienced trainers and shop for quality instruments, all in one place.</p>
+  <p><a class="btn" href="{{ url_for('directory', cat='musicians') }}">Hire an instrumentalist</a>
+     <a class="btn ghost" href="{{ url_for('services') }}">Explore all services</a></p>
+  <div class="staff" aria-label="Our five services">
+    <a href="{{ url_for('directory', cat='musicians') }}" style="--y:70%">Hire instrumentalists</a>
+    <a href="{{ url_for('directory', cat='composers') }}" style="--y:30%">Composition</a>
+    <a href="{{ url_for('directory', cat='producers') }}" style="--y:55%">Production</a>
+    <a href="{{ url_for('directory', cat='trainers') }}" style="--y:20%">Training</a>
+    <a href="{{ url_for('shop') }}" style="--y:65%">Instruments</a>
+  </div>
+</section>
+{% for cat, ps in featured.items() if ps %}
+<section><div class="sh"><h2>{{ {'musicians':'Instrumentalists'}.get(cat, cat|capitalize) }}</h2><a href="{{ url_for('directory', cat=cat) }}">See all</a></div>
+<div class="grid">{% for p in ps %}{% include "_card.html" %}{% endfor %}</div></section>
+{% endfor %}
+<section><div class="sh"><h2>New in the shop</h2><a href="{{ url_for('shop') }}">See all</a></div>
+<div class="grid">{% for p in products %}{% include "_product.html" %}{% endfor %}</div></section>
+<section class="cta"><h2>Are you a musician, composer, producer or trainer?</h2>
+<p>Create a profile, set your rates and receive booking requests.</p>
+<a class="btn" href="{{ url_for('become_provider') }}">Offer your services</a></section>
+{% endblock %}

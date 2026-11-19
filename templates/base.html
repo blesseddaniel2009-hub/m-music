@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}M MUSICS{% endblock %} | M MUSICS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script>
+// No-flash theme bootstrap: apply the saved scheme before first paint.
+// Cookie 'theme' = light|dark|auto (auto follows the OS preference).
+(function(){
+  var c=document.cookie.match(/(?:^|;\s*)theme=(light|dark|auto)\b/);
+  var t=c?c[1]:'auto';
+  var dark = t==='dark' || (t!=='light' && matchMedia('(prefers-color-scheme:dark)').matches);
+  document.documentElement.setAttribute('data-theme', dark?'dark':'light');
+  document.documentElement.setAttribute('data-theme-pref', t);
+})();
+</script>
+</head><body>
+<header class="top"><div class="wrap bar">
+  <a class="logo" href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='logo.jpg') }}" alt="" width="44" height="44"><span>M MUSICS</span></a>
+  <nav>
+    <a href="{{ url_for('index') }}" {% if request.endpoint=='index' %}aria-current="page"{% endif %}>Home</a>
+    <a href="{{ url_for('services') }}" {% if request.endpoint in ('services','directory','shop','product','provider','search') %}aria-current="page"{% endif %}>Services</a>
+    <a href="{{ url_for('about') }}" {% if request.endpoint=='about' %}aria-current="page"{% endif %}>About</a>
+  </nav>
+  <div class="acct">
+    {% if g.user and g.user.is_superadmin %}<a href="{{ url_for('superadmin') }}">Super admin</a>{% elif g.user and g.user.is_staff %}<a href="{{ url_for('admin') }}">Admin</a>{% endif %}
+
+    {# Theme toggle: cycles light -> dark -> auto. POSTs to /theme which sets a cookie. #}
+    <form method="post" action="{{ url_for('set_theme') }}" class="theme-toggle inline">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="next" value="{{ request.full_path if request.full_path != '/' else '' }}">
+      <button type="submit" name="theme" value="dark" class="theme-btn" id="theme-btn"
+              aria-label="Switch theme" title="Switch theme">
+        <span class="theme-icon theme-icon-sun" aria-hidden="true">☀</span>
+        <span class="theme-icon theme-icon-moon" aria-hidden="true">☾</span>
+      </button>
+    </form>
+
+    <a href="{{ url_for('cart') }}">Cart ({{ g.cart_count }})</a>
+    {% if g.user %}<a href="{{ url_for('dashboard') }}">{{ g.user.name.split()[0] }}{% if g.unread %} <b class="dot">{{ g.unread }}</b>{% endif %}</a>
+    <form method="post" action="{{ url_for('logout') }}" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link">Log out</button></form>
+    {% else %}<a href="{{ url_for('login') }}">Log in</a><a class="btn sm" href="{{ url_for('register') }}">Register</a>{% endif %}
+  </div>
+</div></header>
+<main class="wrap">
+{% with msgs = get_flashed_messages(with_categories=true) %}{% for c, m in msgs %}<p class="flash {{ c }}" role="status">{{ m }}</p>{% endfor %}{% endwith %}
+{% block body %}{% endblock %}
+</main>
+<footer><div class="wrap">
+  <p><b>M MUSICS</b> Connecting musical talent, creativity and opportunity.</p>
+  <p><a href="{{ url_for('become_provider') }}">Offer your services</a> <a href="{{ url_for('shop') }}">Shop</a> <a href="{{ url_for('login') }}">Account</a></p>
+  <p class="muted">Terms, privacy and booking policies should be published here before launch.</p>
+</div></footer>
+
+<script>
+// Theme toggle button: cycles light -> dark -> auto on click, then submits the
+// form so the cookie is set server-side and survives reloads.
+(function(){
+  var btn=document.getElementById('theme-btn');
+  if(!btn) return;
+  var pref=document.documentElement.getAttribute('data-theme-pref')||'auto';
+  var next={'light':'dark','dark':'auto','auto':'light'}[pref]||'light';
+  btn.value=next;
+  var title={'light':'Theme: light (click for dark)','dark':'Theme: dark (click for auto)','auto':'Theme: auto (click for light)'}[next];
+  btn.setAttribute('title',title);
+  btn.setAttribute('aria-label',title);
+  document.body.setAttribute('data-active-theme',document.documentElement.getAttribute('data-theme'));
+  // Listen for OS changes while in auto mode.
+  matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){
+    if((document.documentElement.getAttribute('data-theme-pref'))==='auto'){
+      document.documentElement.setAttribute('data-theme', matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+    }
+  });
+})();
+</script>
+</body></html>

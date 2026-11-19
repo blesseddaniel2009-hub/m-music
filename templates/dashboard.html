@@ -1,0 +1,45 @@
+{% extends "base.html" %}{% block title %}Dashboard{% endblock %}
+{% macro actions(b, list) %}{% for a in list %}<form method="post" action="{{ url_for('booking_action', bid=b.id, action=a[0]) }}" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link">{{ a[1] }}</button></form>{% endfor %}{% endmacro %}
+{% block body %}<h1>Hello, {{ g.user.name }}</h1>
+<h2>Notifications</h2>{% for n in notes %}<p>{{ n.text }} <span class="muted">{{ n.created.strftime('%d %b %H:%M') }}</span></p>{% else %}<p class="muted">Nothing new.</p>{% endfor %}
+{% if g.user.provider %}<h2>Booking requests for you</h2>
+<p><a href="{{ url_for('become_provider') }}">Edit profile</a> · <a href="{{ url_for('provider', pid=g.user.provider.id) }}">View public page</a>{% if not g.user.provider.approved %} · <b>Awaiting approval</b>{% endif %}</p>
+<table>{% for b in incoming %}<tr><td><a href="{{ url_for('booking_detail', bid=b.id) }}">#{{ b.id }}</a> {{ b.customer.name }}<br><span class="muted">{{ b.customer.phone }}</span></td><td>{{ b.event_type }}<br>{{ b.date }} {{ b.time }}<br>{{ b.location }}</td><td>{{ b.budget|ugx }}</td><td><b>{{ b.status }}</b></td>
+<td>{% if b.status=='Pending' %}{{ actions(b, [('accept','Accept'),('decline','Decline')]) }}{% elif b.status=='Confirmed' %}{{ actions(b, [('start','Start')]) }}{% elif b.status=='In Progress' %}{{ actions(b, [('complete','Mark completed')]) }}{% endif %}</td></tr>{% else %}<tr><td class="muted">No requests yet.</td></tr>{% endfor %}</table>
+
+<h2>My booked days</h2>
+<p class="muted">Calendar of dates you are booked. Days with a booking are highlighted; click a day to jump to the booking.</p>
+{% if booked_cells %}
+<nav class="cal-nav" aria-label="Booked-days month">
+  <a class="btn sm ghost" href="{{ url_for('dashboard', y=booked_prev.y, m=booked_prev.m) }}">‹ Prev</a>
+  <span class="cal-month">{{ booked_month_name }}</span>
+  <a class="btn sm ghost" href="{{ url_for('dashboard', y=booked_next.y, m=booked_next.m) }}">Next ›</a>
+</nav>
+<div class="cal booked-cal" role="grid" aria-label="Booked days calendar">
+  <div class="cal-row cal-weekdays" role="row">
+    {% for d in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}<div class="cal-wd" role="columnheader">{{ d }}</div>{% endfor %}
+  </div>
+  {% for week in booked_cells %}
+  <div class="cal-row" role="row">
+    {% for cell in week %}
+    <div class="cal-cell booked-cell {{ 'out' if not cell.in_month }} {{ 'today' if cell.today }} {{ 'booked' if cell.bookings }}"
+         role="gridcell" aria-label="{{ cell.iso }}{% if cell.bookings %}: {{ cell.bookings|length }} booking(s){% endif %}">
+      <span class="cal-date">{{ cell.date.day }}</span>
+      {% if cell.bookings %}
+        <span class="booked-count">{{ cell.bookings|length }}</span>
+        <div class="booked-list">
+          {% for b in cell.bookings[:3] %}<a href="{{ url_for('booking_detail', bid=b.id) }}" class="booked-pill">#{{ b.id }} {{ b.customer.name.split()[0] }} · {{ b.status }}</a>{% endfor %}
+          {% if cell.bookings|length > 3 %}<span class="muted more">+{{ cell.bookings|length-3 }} more</span>{% endif %}
+        </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}<p class="muted">No bookings to show.</p>{% endif %}
+{% else %}<p><a class="btn sm" href="{{ url_for('become_provider') }}">Offer your services</a></p>{% endif %}
+<h2>My bookings</h2><table>{% for b in my_bookings %}<tr><td><a href="{{ url_for('booking_detail', bid=b.id) }}">#{{ b.id }}</a> <a href="{{ url_for('provider', pid=b.provider.id) }}">{{ b.provider.display_name }}</a></td><td>{{ b.event_type }}, {{ b.date }}</td><td><b>{{ b.status }}</b></td>
+<td>{% if b.status=='Accepted' %}{{ actions(b, [('confirm','Confirm')]) }}{% endif %}{% if b.status in ('Pending','Accepted','Confirmed') %}{{ actions(b, [('cancel','Cancel')]) }}{% endif %}</td></tr>{% else %}<tr><td class="muted">No bookings yet.</td></tr>{% endfor %}</table>
+<h2>My orders</h2><table>{% for o in orders %}<tr><td>#{{ o.id }}</td><td>{{ o.created.strftime('%d %b %Y') }}</td><td>{{ o.total|ugx }}</td><td>{{ o.status }}</td><td>{% if o.status=='Placed' %}<a href="{{ url_for('pay', kind='order', oid=o.id) }}">Pay now</a>{% else %}{{ o.payment.reference if o.payment }}{% endif %}</td></tr>{% else %}<tr><td class="muted">No orders yet.</td></tr>{% endfor %}</table>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% block title %}All Services{% endblock %}
+{% block body %}
+<h1>All services</h1>
+<p class="muted">Everything M MUSICS offers, in one place.</p>
+<form action="{{ url_for('search') }}" class="filters"><input name="q" placeholder="Search musicians, producers, trainers, instruments" aria-label="Search" size="44"><button class="btn sm">Search</button></form>
+<div class="svc-grid">
+  <a class="svc big" href="{{ url_for('directory', cat='musicians') }}">
+    <h2>Hire instrumentalists</h2>
+    <p>Players of piano, guitar, drums, strings, brass, woodwind and traditional African instruments for events, churches, schools and studios. Instrumentalists only.</p>
+    <span class="muted">{{ counts.musicians }} instrumentalist{{ '' if counts.musicians==1 else 's' }} available</span>
+  </a>
+  <a class="svc" href="{{ url_for('directory', cat='composers') }}">
+    <h2>Music composition</h2>
+    <p>Original songs, film scoring, jingles, gospel pieces, arrangements and notation.</p>
+    <span class="muted">{{ counts.composers }} composer{{ '' if counts.composers==1 else 's' }}</span>
+  </a>
+  <a class="svc" href="{{ url_for('directory', cat='producers') }}">
+    <h2>Music production</h2>
+    <p>Recording, beats, mixing, mastering, podcasts and sound design, with packages from basic to professional.</p>
+    <span class="muted">{{ counts.producers }} producer{{ '' if counts.producers==1 else 's' }}</span>
+  </a>
+  <a class="svc" href="{{ url_for('directory', cat='trainers') }}">
+    <h2>Music training</h2>
+    <p>Piano, guitar, drums, violin, vocals, theory and music technology. Online or in person, one-to-one or in groups.</p>
+    <span class="muted">{{ counts.trainers }} trainer{{ '' if counts.trainers==1 else 's' }}</span>
+  </a>
+  <a class="svc wide" href="{{ url_for('shop') }}">
+    <h2>Musical instruments shop</h2>
+    <p>Keyboards, guitars, drum kits, sound equipment, production gear and accessories. Pay with MTN Mobile Money, Airtel Money, bank or card.</p>
+    <span class="muted">{{ counts.shop }} product{{ '' if counts.shop==1 else 's' }} in the shop</span>
+  </a>
+</div>
+{% endblock %}
