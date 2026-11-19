@@ -22,17 +22,31 @@ _WRITEABLE_ROOT = "/tmp" if _IS_VERCEL else os.path.dirname(os.path.abspath(__fi
 _DEFAULT_DB_PATH = os.path.join(_WRITEABLE_ROOT, "mmusics.db")
 _DATABASE_URL = os.environ.get("DATABASE_URL")
 
+
 if _DATABASE_URL:
-    # Normalize provider URLs and use the installed psycopg2 PostgreSQL driver.
+    # Normalize PostgreSQL URLs to the installed psycopg2 driver.
     if _DATABASE_URL.startswith("postgres://"):
-        _DATABASE_URL = _DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    if _DATABASE_URL.startswith("postgresql://"):
         _DATABASE_URL = _DATABASE_URL.replace(
-            "postgresql://", "postgresql+psycopg2://", 1
+            "postgres://", "postgresql://", 1
         )
+
+    if _DATABASE_URL.startswith("postgresql+psycopg://"):
+        _DATABASE_URL = _DATABASE_URL.replace(
+            "postgresql+psycopg://",
+            "postgresql+psycopg2://",
+            1
+        )
+    elif _DATABASE_URL.startswith("postgresql://"):
+        _DATABASE_URL = _DATABASE_URL.replace(
+            "postgresql://",
+            "postgresql+psycopg2://",
+            1
+        )
+
     _DEFAULT_DB_URI = _DATABASE_URL
 else:
     _DEFAULT_DB_URI = f"sqlite:///{_DEFAULT_DB_PATH}"
+
 # Vercel serves files placed in /public directly from its CDN. We keep Flask's
 # static assets under public/static/ and mount them at the /static URL prefix,
 # so url_for('static', filename='style.css') -> /static/style.css. Vercel serves
