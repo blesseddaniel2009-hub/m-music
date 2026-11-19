@@ -3,11 +3,15 @@ import os, secrets, smtplib, time, uuid, calendar as _cal, json
 from email.message import EmailMessage
 from datetime import datetime, date, timedelta
 from functools import wraps
+from dotenv import load_dotenv
 from flask import (Flask, render_template, request, redirect, url_for,
                    session, flash, abort, g, send_from_directory, jsonify)
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
+
+# Load local environment variables before resolving application configuration.
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 # On Vercel the deployment is a read-only serverless function. The only
 # writable path is /tmp, so the SQLite database (when no DATABASE_URL is set)
@@ -16,9 +20,19 @@ from werkzeug.security import generate_password_hash, check_password_hash
 _IS_VERCEL = bool(os.environ.get("VERCEL"))
 _WRITEABLE_ROOT = "/tmp" if _IS_VERCEL else os.path.dirname(os.path.abspath(__file__))
 _DEFAULT_DB_PATH = os.path.join(_WRITEABLE_ROOT, "mmusics.db")
-_DEFAULT_DB_URI = os.environ.get(
-    "DATABASE_URL", f"sqlite:///{_DEFAULT_DB_PATH}"
-)
+_DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if _DATABASE_URL:
+    # Normalize provider URLs and use the installed psycopg2 PostgreSQL driver.
+    if _DATABASE_URL.startswith("postgres://"):
+        _DATABASE_URL = _DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    if _DATABASE_URL.startswith("postgresql://"):
+        _DATABASE_URL = _DATABASE_URL.replace(
+            "postgresql://", "postgresql+psycopg2://", 1
+        )
+    _DEFAULT_DB_URI = _DATABASE_URL
+else:
+    _DEFAULT_DB_URI = f"sqlite:///{_DEFAULT_DB_PATH}"
 # Vercel serves files placed in /public directly from its CDN. We keep Flask's
 # static assets under public/static/ and mount them at the /static URL prefix,
 # so url_for('static', filename='style.css') -> /static/style.css. Vercel serves
@@ -1207,8 +1221,10 @@ def init_db():
         app.logger.warning("init_db skipped: %s", exc)
 
 
-with app.app_context():
-    init_db()
+# Skip automatic initialization when running migration scripts.
+if os.environ.get("SKIP_DB_INIT") != "1":
+    with app.app_context():
+        init_db()
 
 
 if __name__ == "__main__":

@@ -1,8 +1,11 @@
-# M MUSICS - Python dependencies for Vercel
 # Vercel's Python runtime reads this file at build time and runs `pip install -r requirements.txt`.
 # Pin minor versions so production builds are reproducible.
 
+
+# M MUSICS - Python dependencies for Vercel
 Flask>=3.1,<4
 Flask-SQLAlchemy>=3.1,<4
 SQLAlchemy>=2.0,<3
 Werkzeug>=3.0,<4
+python-dotenv>=1.0,<2
+psycopg2-binary>=2.9,<3

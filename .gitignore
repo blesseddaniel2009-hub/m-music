@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+.env
+
+# Local database files
+mmusics.db
+mmusics_backup.db
+
+# Temporary migration and inspection scripts
+check_relationships.py
+inspect_db.py
+inspect_schema.py
+compare_databases.py
+compare_users.py
+inspect_neon.py
+migrate_to_neon.py
+sync_users.py
+test_neon.py
+verify_users.py
